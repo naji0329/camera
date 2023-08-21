@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Real-time Camera Video</title>
+    <style>
+      #recordBtn {
+        background-color: red;
+        color: white;
+        border: none;
+        height: 50px;
+        width: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        cursor: pointer;
+        margin: auto;
+      }
+
+      #recordAgain {
+        background-color: red;
+        color: white;
+        border: none;
+        height: 50px;
+        width: 50px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        cursor: pointer;
+        margin: auto;
+      }
+
+      .container {
+        display: flex;
+        justify-content: center;
+      }
+
+      body {
+        background-color: black;
+        margin: 0;
+        padding: 0;
+      }
+
+      .fixed-bottom {
+        position: fixed;
+        bottom: 20px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+      }
+
+      #canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #recordedVideoSection {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="container">
+      <div>
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="fixed-bottom">
+        <button id="recordBtn" class="start">Start</button>
+      </div>
+    </div>
+    <div id="recordedVideoSection">
+      <div id="recordedVideo"></div>
+      <!-- <div class="fixed-bottom">
+        <button id="recordAgain">Record again</button>
+      </div> -->
+    </div>
+
+    <script>
+      const recordButton = document.getElementById("recordBtn");
+      const recordedVideoSection = document.getElementById(
+        "recordedVideoSection"
+      );
+      const container = document.getElementById("container");
+
+      // Access the canvas element
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      let isRecording = false;
+
+      let chunks = [];
+      let mediaRecorder;
+
+      const screenHeight = window.innerHeight;
+      const screenWidth = window.innerWidth;
+
+      recordButton.addEventListener("click", () => {
+        if (isRecording) {
+          stop_record();
+          recordButton.innerText = "Start";
+          container.style.display = "none";
+          recordedVideoSection.style.display = "block";
+          // container.style.display = "block";
+          // recordedVideoSection.style.display = "none";
+        } else {
+          start_record();
+          recordButton.innerText = "Stop";
+        }
+
+        isRecording = !isRecording; // Toggle recording status
+      });
+
+      // Request access to the user's camera
+      navigator.mediaDevices
+        .getUserMedia({ video: true })
+        .then((stream) => {
+          // Get the video track from the stream
+          const videoTrack = stream.getVideoTracks()[0];
+
+          // Get the settings from the video track
+          const { width, height } = videoTrack.getSettings();
+
+          canvas.width = screenWidth;
+          canvas.height = screenHeight;
+          // Create a video element to receive the camera feed
+          const video = document.createElement("video");
+          video.srcObject = stream;
+          video.autoplay = true;
+
+          // Create a video element for the overlay
+          const overlayVideo = document.createElement("video");
+          overlayVideo.src = "overlay.webm";
+          overlayVideo.loop = true;
+          overlayVideo.autoplay = true;
+
+          // Draw the video frames onto the canvas
+          function drawVideo() {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(overlayVideo, 0, 0, canvas.width, canvas.height);
+
+            requestAnimationFrame(drawVideo);
+          }
+          drawVideo();
+        })
+        .catch((error) => {
+          console.error("Error accessing camera:", error);
+        });
+
+      function start_record() {
+        // Your code to start the recording goes here
+        mediaRecorder = new MediaRecorder(canvas.captureStream());
+        mediaRecorder.start();
+
+        mediaRecorder.addEventListener("dataavailable", (event) => {
+          chunks.push(event.data);
+          console.log("asdfasdfasdfasdf");
+          // Create a video element to play back the recorded video
+          const recordedVideo = document.createElement("video");
+          recordedVideo.controls = true;
+          console.log("chunks", chunks);
+          const recordedBlob = new Blob(chunks, { type: "video/webm" });
+          const recordedURL = URL.createObjectURL(recordedBlob);
+
+          recordedVideo.src = recordedURL;
+          recordedVideoElement = document.getElementById("recordedVideo");
+          recordedVideoElement.innerHTML = "";
+          recordedVideoElement.appendChild(recordedVideo);
+        });
+      }
+
+      function stop_record() {
+        // Your code to pause the recording goes here
+        mediaRecorder.stop();
+      }
+    </script>
+  </body>
+</html>
