@@ -137,8 +137,8 @@
           video.autoplay = true;
 
           // Create a video element for the overlay
-          const overlayVideo = document.createElement("video");
-          overlayVideo.src = "overlay.webm";
+          const overlayVideo = document.createElement("img");
+          overlayVideo.src = "overlay.mov";
           overlayVideo.loop = true;
           overlayVideo.autoplay = true;
 
@@ -180,6 +180,18 @@
       function stop_record() {
         // Your code to pause the recording goes here
         mediaRecorder.stop();
+      }
+
+      function check_device_type() {
+        const isAndroid = /Android/i.test(navigator.userAgent);
+
+        // Check if the user agent includes "iPhone" or "iPad"
+        const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        var type = isAndroid ? "Android" : null;
+        type = isiOS ? "iOS" : null;
+
+        return type;
       }
     </script>
   </body>
