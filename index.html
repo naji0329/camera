@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Real-time Camera Video</title>
+    <script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
     <style>
       #recordBtn {
         background-color: red;
@@ -29,11 +31,6 @@
         border-radius: 50%;
         cursor: pointer;
         margin: auto;
-      }
-
-      .container {
-        display: flex;
-        justify-content: center;
       }
 
       body {
@@ -69,14 +66,13 @@
     </style>
   </head>
   <body>
-    <div class="container" id="container">
-      <div>
-        <canvas id="canvas"></canvas>
-      </div>
-      <div class="fixed-bottom">
-        <button id="recordBtn" class="start">Start</button>
-      </div>
+    <div id="container">
+      <canvas id="canvas"></canvas>
     </div>
+    <div class="fixed-bottom">
+      <button id="recordBtn" class="start">Start</button>
+    </div>
+
     <div id="recordedVideoSection">
       <div id="recordedVideo"></div>
       <!-- <div class="fixed-bottom">
@@ -97,11 +93,9 @@
 
       let isRecording = false;
 
-      let chunks = [];
-      let mediaRecorder;
-
       const screenHeight = window.innerHeight;
       const screenWidth = window.innerWidth;
+      var recorder;
 
       recordButton.addEventListener("click", () => {
         if (isRecording) {
@@ -109,8 +103,6 @@
           recordButton.innerText = "Start";
           container.style.display = "none";
           recordedVideoSection.style.display = "block";
-          // container.style.display = "block";
-          // recordedVideoSection.style.display = "none";
         } else {
           start_record();
           recordButton.innerText = "Stop";
@@ -131,6 +123,7 @@
 
           canvas.width = screenWidth;
           canvas.height = screenHeight;
+
           // Create a video element to receive the camera feed
           const video = document.createElement("video");
           video.srcObject = stream;
@@ -138,7 +131,7 @@
 
           // Create a video element for the overlay
           const overlayVideo = document.createElement("video");
-          overlayVideo.src = "overlay.mp4";
+          overlayVideo.src = "overlay.mov";
           overlayVideo.loop = true;
           overlayVideo.autoplay = true;
 
@@ -156,42 +149,33 @@
         });
 
       function start_record() {
-        // Your code to start the recording goes here
-        mediaRecorder = new MediaRecorder(canvas.captureStream());
-        mediaRecorder.start();
-
-        mediaRecorder.addEventListener("dataavailable", (event) => {
-          chunks.push(event.data);
-          console.log("asdfasdfasdfasdf");
-          // Create a video element to play back the recorded video
-          const recordedVideo = document.createElement("video");
-          recordedVideo.controls = true;
-          console.log("chunks", chunks);
-          const recordedBlob = new Blob(chunks, { type: "video/webm" });
-          const recordedURL = URL.createObjectURL(recordedBlob);
-
-          recordedVideo.src = recordedURL;
-          recordedVideoElement = document.getElementById("recordedVideo");
-          recordedVideoElement.innerHTML = "";
-          recordedVideoElement.appendChild(recordedVideo);
+        // Create a new RecordRTC instance with the canvas stream
+        recorder = RecordRTC(canvas.captureStream(), {
+          type: "video",
+          mimeType: "video/mp4",
+          recorderType: MediaStreamRecorder,
+          bitsPerSecond: 128000,
         });
+
+        // Start recording
+        recorder.startRecording();
       }
 
       function stop_record() {
-        // Your code to pause the recording goes here
-        mediaRecorder.stop();
-      }
+        recorder.stopRecording(() => {
+          // Get the recorded video blob
+          const blob = recorder.getBlob();
 
-      function check_device_type() {
-        const isAndroid = /Android/i.test(navigator.userAgent);
+          // Create a video element to play back the recorded video
+          const recordedVideo = document.createElement("video");
+          recordedVideo.controls = true;
+          recordedVideo.src = URL.createObjectURL(blob);
 
-        // Check if the user agent includes "iPhone" or "iPad"
-        const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-        var type = isAndroid ? "Android" : null;
-        type = isiOS ? "iOS" : null;
-
-        return type;
+          // Add the video element to the page
+          const recordedVideoElement = document.getElementById("recordedVideo");
+          recordedVideoElement.innerHTML = "";
+          recordedVideoElement.appendChild(recordedVideo);
+        });
       }
     </script>
   </body>
