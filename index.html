@@ -135,6 +135,8 @@
           overlayVideo.loop = true;
           overlayVideo.autoplay = true;
 
+          overlayVideo.play();
+
           // Draw the video frames onto the canvas
           function drawVideo() {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
