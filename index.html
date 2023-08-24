@@ -135,16 +135,22 @@
           overlayVideo.loop = true;
           overlayVideo.autoplay = true;
 
-          overlayVideo.play();
+          // Wait for the video to load
+          overlayVideo.addEventListener("loadedmetadata", () => {
+            // Play the video
+            overlayVideo.play();
 
-          // Draw the video frames onto the canvas
-          function drawVideo() {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            ctx.drawImage(overlayVideo, 0, 0, canvas.width, canvas.height);
+            // Draw the video frames onto the canvas
+            function drawVideo() {
+              if (!overlayVideo.paused) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(overlayVideo, 0, 0, canvas.width, canvas.height);
 
-            requestAnimationFrame(drawVideo);
-          }
-          drawVideo();
+                requestAnimationFrame(drawVideo);
+              }
+            }
+            drawVideo();
+          });
         })
         .catch((error) => {
           console.error("Error accessing camera:", error);
